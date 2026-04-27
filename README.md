@@ -201,8 +201,12 @@ At this time this project is not open to external contributions.
 ## Authors and acknowledgment
 NVIDIA Corporation
 
+C# wrapper and examples by Cristian Mori (cristian.mori@gmail.com)
+
 ## License
 
 The software and materials are governed by the [NVIDIA Software License Agreement](https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-software-license-agreement/) and the [Product-Specific Terms for NVIDIA Omniverse](https://www.nvidia.com/en-us/agreements/enterprise-software/product-specific-terms-for-omniverse/).
+
+The C# wrapper (`csharp/` and `examples/csharp/`) is licensed under the [MIT License](csharp/LICENSE). It is a standalone wrapper that calls the ovrtx native library through P/Invoke; the native library itself remains under the NVIDIA license above.
 
 This project will download and install additional third-party open source software projects. Review the license terms of these open source projects before use.

@@ -9,7 +9,8 @@
     <AssemblyName>Nvidia.Ovrtx</AssemblyName>
     <Version>0.2.0</Version>
     <Description>C# wrapper for NVIDIA ovrtx RTX rendering library</Description>
-    <Authors>NVIDIA Corporation</Authors>
+    <Authors>Cristian Mori</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
 </Project>

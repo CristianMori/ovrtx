@@ -1,14 +1,4 @@
-<!--
-SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-SPDX-License-Identifier: LicenseRef-NvidiaProprietary
-
-NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
-property and proprietary rights in and to this material, related
-documentation and any modifications thereto. Any use, reproduction,
-disclosure or distribution of this material and related documentation
-without an express license agreement from NVIDIA CORPORATION or
-its affiliates is strictly prohibited.
--->
+<!-- Copyright (c) 2026 Cristian Mori. Licensed under the MIT License. See csharp/LICENSE for details. -->
 # Nvidia.Ovrtx — C# Wrapper for NVIDIA ovrtx
 
 A .NET 8 wrapper for the ovrtx C API, providing P/Invoke bindings and a high-level managed API for Omniverse RTX sensor simulation and rendering.

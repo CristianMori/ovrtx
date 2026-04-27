@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-// SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+// Copyright (c) 2026 Cristian Mori. Licensed under the MIT License.
+// See csharp/LICENSE for details.
 
 // CUDA Driver API P/Invoke bindings and interop helpers.
 // Port of examples/c/vulkan-interop/src/cuda/cuda_kernel.cpp.
