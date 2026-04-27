@@ -137,6 +137,19 @@ foreach (var frame in product.Frames)
 
 See the [C# wrapper README](csharp/Nvidia.Ovrtx/README.md) for the full API reference.
 
+### Running the C# tests
+
+```bash
+cd csharp/Nvidia.Ovrtx.Tests
+dotnet test
+```
+
+181 unit tests validate struct layouts, enum values, string marshaling, config building, and the public API surface — all without requiring the native library or a GPU. To also run GPU integration tests:
+
+```bash
+OVRTX_TEST_INTEGRATION=1 dotnet test
+```
+
 ## Examples
 
 Further examples using the C, Python, and C# APIs are available in the [examples](examples/README.md) directory. See the individual examples for building and usage instructions.
