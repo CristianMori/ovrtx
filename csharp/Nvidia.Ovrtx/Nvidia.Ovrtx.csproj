@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Nvidia.Ovrtx</RootNamespace>
+    <AssemblyName>Nvidia.Ovrtx</AssemblyName>
+    <Version>0.2.0</Version>
+    <Description>C# wrapper for NVIDIA ovrtx RTX rendering library</Description>
+    <Authors>Cristian Mori</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+</Project>

@@ -43,3 +43,7 @@ PACKAGE-DEPS.yaml
 # Don't commit uv.lock files, pin explicit versions where required instead.
 uv.lock
 **/uv.lock
+
+# .NET build artifacts
+**/bin/
+**/obj/

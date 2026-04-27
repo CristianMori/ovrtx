@@ -2,12 +2,13 @@
 
 # NVIDIA ovrtx
 
-ovrtx is a lightweight C and Python SDK for Omniverse RTX, allowing developers to integrate RTX sensor simulation and visualization easily into their applications.
+ovrtx is a lightweight C, Python, and C# SDK for Omniverse RTX, allowing developers to integrate RTX sensor simulation and visualization easily into their applications.
 
 Omniverse RTX provides real-time, physically accurate sensor simulation and rendering for [Physical AI](https://www.nvidia.com/en-us/glossary/generative-physical-ai/), targeting robotics learning, synthetic data generation, and industrial and design workflows.
 
 * [Get started in Python](#getting-started-in-python)
 * [Get started in C](#getting-started-in-c)
+* [Get started in C#](#getting-started-in-c-1)
 
 > [!NOTE]
 > ovrtx is currently **pre-release** software.
@@ -18,7 +19,7 @@ Omniverse RTX provides real-time, physically accurate sensor simulation and rend
 * Physically accurate simulation of cameras, lidar, radar, ultrasonic and more sensors.
 * Scalable simulation performance from reinforcement learning in-the-loop with tens of thousands of frames per second, through real-time, photorealistic, interactive viewport and navigation, to offline predictive rendering.
 * [OpenUSD](https://aousd.org/) scene description allowing interchange with a vast ecosystem of content creation, CAD and simulation tools.
-* Easy integration with Python simulation and learning ecosystem.
+* Easy integration with Python and C# simulation and learning ecosystems.
 
 ## Getting Started in Python
 
@@ -77,9 +78,68 @@ The resulting image will be written to `./out.png` and can be inspected with any
 
 Note that the first time a program built against ovrtx is run, it will compile and cache necessary shaders, which may take some time depending on your system. Subsequent runs will use the cached shaders and will be fast.
 
+## Getting Started in C#
+
+The C# wrapper requires [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) and an NVIDIA RTX-capable GPU.
+
+To get started, first clone this repository and run the first example with `dotnet`:
+
+```bash
+git clone https://github.com/NVIDIA-Omniverse/ovrtx.git
+cd ovrtx/examples/csharp/minimal
+dotnet run
+```
+
+The first build will automatically download the ovrtx native package from GitHub Releases. This is handled by `examples/csharp/msbuild/ovrtx.targets`, which is the C# equivalent of the CMake `ovrtx_fetch()` macro.
+
+The minimal example shows how to create the renderer, load an OpenUSD scene and render a single image, copying the results back to the CPU.
+
+![minimal example](img/example-minimal.jpg)
+
+Note that the first time a program built against ovrtx is run, it will compile and cache necessary shaders, which may take some time depending on your system. Subsequent runs will use the cached shaders and will be fast.
+
+### Using the C# wrapper in your own project
+
+1. Reference the `Nvidia.Ovrtx` project (or build and reference the DLL):
+
+```xml
+<ItemGroup>
+  <ProjectReference Include="path/to/csharp/Nvidia.Ovrtx/Nvidia.Ovrtx.csproj" />
+</ItemGroup>
+```
+
+2. Import the MSBuild targets to automatically download the native library:
+
+```xml
+<Import Project="path/to/examples/csharp/msbuild/ovrtx.targets" />
+```
+
+3. Use the API:
+
+```csharp
+using Nvidia.Ovrtx;
+
+using var renderer = new Renderer();
+renderer.AddUsd("scene.usda");
+
+using var products = renderer.Step(
+    renderProducts: ["/Render/Camera"],
+    deltaTime: 1.0 / 60.0);
+
+foreach (var (name, product) in products.Products)
+foreach (var frame in product.Frames)
+{
+    using var mapped = frame.RenderVars["LdrColor"].Map(MapDeviceType.Cpu);
+    // mapped.Tensor.Data contains RGBA pixel data
+    // mapped.Tensor.GetShape() returns [height, width, channels]
+}
+```
+
+See the [C# wrapper README](csharp/Nvidia.Ovrtx/README.md) for the full API reference.
+
 ## Examples
 
-Further examples using both the C and Python APIs are available in the [examples](examples/README.md) directory. See the individual examples for building and usage instructions.
+Further examples using the C, Python, and C# APIs are available in the [examples](examples/README.md) directory. See the individual examples for building and usage instructions.
 
 ## Releases
 
@@ -141,8 +201,12 @@ At this time this project is not open to external contributions.
 ## Authors and acknowledgment
 NVIDIA Corporation
 
+C# wrapper and examples by Cristian Mori (cristian.mori@gmail.com)
+
 ## License
 
 The software and materials are governed by the [NVIDIA Software License Agreement](https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-software-license-agreement/) and the [Product-Specific Terms for NVIDIA Omniverse](https://www.nvidia.com/en-us/agreements/enterprise-software/product-specific-terms-for-omniverse/).
+
+The C# wrapper (`csharp/` and `examples/csharp/`) is licensed under the [MIT License](csharp/LICENSE). It is a standalone wrapper that calls the ovrtx native library through P/Invoke; the native library itself remains under the NVIDIA license above.
 
 This project will download and install additional third-party open source software projects. Review the license terms of these open source projects before use.

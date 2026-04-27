@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <!-- Reference the ovrtx C# wrapper -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\csharp\Nvidia.Ovrtx\Nvidia.Ovrtx.csproj" />
+  </ItemGroup>
+
+  <!-- Fetch ovrtx native library (equivalent of cmake/ovrtx.cmake + ovrtx_fetch()) -->
+  <Import Project="..\msbuild\ovrtx.targets" />
+
+</Project>
