@@ -1,0 +1,116 @@
+<!--
+  SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+  SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+
+  ovrtx.targets - Fetch and configure ovrtx native library for .NET projects.
+
+  Usage:
+    In your .csproj:
+      <Import Project="../msbuild/ovrtx.targets" />
+
+  This is the C# equivalent of examples/c/cmake/ovrtx.cmake.
+  It downloads the platform-specific ovrtx native package from GitHub Releases,
+  extracts it, and copies the runtime files to the output directory on build.
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <OvrtxVersion>0.2.0</OvrtxVersion>
+    <OvrtxBuildId>280040</OvrtxBuildId>
+    <OvrtxCommit>ac9618b8</OvrtxCommit>
+
+    <!-- Shared _deps directory (like cmake/FetchContent).
+         If copying this project to your own workspace, override OvrtxDepsDir. -->
+    <OvrtxDepsDir Condition="'$(OvrtxDepsDir)' == ''">$(MSBuildThisFileDirectory)_deps</OvrtxDepsDir>
+
+    <!-- Platform detection -->
+    <OvrtxPlatform Condition="$([MSBuild]::IsOSPlatform('Windows'))">windows-x86_64</OvrtxPlatform>
+    <OvrtxPlatform Condition="$([MSBuild]::IsOSPlatform('Linux')) And '$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'X64'">manylinux_2_35_x86_64</OvrtxPlatform>
+    <OvrtxPlatform Condition="$([MSBuild]::IsOSPlatform('Linux')) And '$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'Arm64'">manylinux_2_35_aarch64</OvrtxPlatform>
+
+    <OvrtxPackageName>ovrtx@$(OvrtxVersion).$(OvrtxBuildId).$(OvrtxCommit).$(OvrtxPlatform)</OvrtxPackageName>
+    <OvrtxPackageUrl>https://github.com/NVIDIA-Omniverse/ovrtx/releases/download/v$(OvrtxVersion)/$(OvrtxPackageName).zip</OvrtxPackageUrl>
+    <OvrtxExtractDir>$(OvrtxDepsDir)\$(OvrtxPackageName)</OvrtxExtractDir>
+    <OvrtxZipPath>$(OvrtxDepsDir)\$(OvrtxPackageName).zip</OvrtxZipPath>
+
+    <!-- Native library file names -->
+    <OvrtxDllName Condition="$([MSBuild]::IsOSPlatform('Windows'))">ovrtx-dynamic.dll</OvrtxDllName>
+    <OvrtxDllName Condition="$([MSBuild]::IsOSPlatform('Linux'))">libovrtx-dynamic.so</OvrtxDllName>
+
+    <!-- Runtime directories that need to be linked/copied alongside the DLL -->
+    <OvrtxRuntimeDirs>cache;library;libs;mdl;plugins;rendering-data;usd_plugins</OvrtxRuntimeDirs>
+  </PropertyGroup>
+
+  <!-- Download the native package if not already present -->
+  <Target Name="OvrtxDownload" BeforeTargets="Build" Condition="!Exists('$(OvrtxExtractDir)')">
+    <Message Importance="high" Text="Downloading ovrtx native package from $(OvrtxPackageUrl)..." />
+    <MakeDir Directories="$(OvrtxDepsDir)" />
+
+    <!-- Download (PowerShell on Windows, curl on Linux). Non-fatal if network unavailable. -->
+    <Exec Command="powershell -NoProfile -Command &quot;[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '$(OvrtxPackageUrl)' -OutFile '$(OvrtxZipPath)' -UseBasicParsing&quot;"
+          Condition="$([MSBuild]::IsOSPlatform('Windows')) And !Exists('$(OvrtxZipPath)')"
+          ConsoleToMSBuild="true"
+          IgnoreExitCode="true" />
+    <Exec Command="curl -L -o '$(OvrtxZipPath)' '$(OvrtxPackageUrl)'"
+          Condition="$([MSBuild]::IsOSPlatform('Linux')) And !Exists('$(OvrtxZipPath)')"
+          ConsoleToMSBuild="true"
+          IgnoreExitCode="true" />
+
+    <!-- Extract -->
+    <Message Importance="high" Text="Extracting to $(OvrtxExtractDir)..." />
+    <Exec Command="powershell -NoProfile -Command &quot;Expand-Archive -Path '$(OvrtxZipPath)' -DestinationPath '$(OvrtxExtractDir)' -Force&quot;"
+          Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+    <Exec Command="unzip -q -o '$(OvrtxZipPath)' -d '$(OvrtxExtractDir)'"
+          Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
+
+    <Message Importance="high" Text="ovrtx native package ready at $(OvrtxExtractDir)" />
+  </Target>
+
+  <!-- Find the bin directory containing the native library -->
+  <Target Name="OvrtxLocateBinDir" AfterTargets="OvrtxDownload" BeforeTargets="Build"
+          Condition="Exists('$(OvrtxExtractDir)')">
+    <!-- The zip may extract with a nested directory. Find where the DLL actually is. -->
+    <PropertyGroup>
+      <!-- Try direct: extractdir/bin/ovrtx-dynamic.dll -->
+      <OvrtxBinDir Condition="Exists('$(OvrtxExtractDir)\bin\$(OvrtxDllName)')">$(OvrtxExtractDir)\bin</OvrtxBinDir>
+      <!-- Try nested: extractdir/ovrtx/bin/ovrtx-dynamic.dll -->
+      <OvrtxBinDir Condition="'$(OvrtxBinDir)' == '' And Exists('$(OvrtxExtractDir)\ovrtx\bin\$(OvrtxDllName)')">$(OvrtxExtractDir)\ovrtx\bin</OvrtxBinDir>
+      <!-- Try flat: extractdir/ovrtx-dynamic.dll -->
+      <OvrtxBinDir Condition="'$(OvrtxBinDir)' == '' And Exists('$(OvrtxExtractDir)\$(OvrtxDllName)')">$(OvrtxExtractDir)</OvrtxBinDir>
+      <!-- Try lib: extractdir/lib/ovrtx-dynamic.dll -->
+      <OvrtxBinDir Condition="'$(OvrtxBinDir)' == '' And Exists('$(OvrtxExtractDir)\lib\$(OvrtxDllName)')">$(OvrtxExtractDir)\lib</OvrtxBinDir>
+    </PropertyGroup>
+
+    <Warning Condition="'$(OvrtxBinDir)' == ''"
+             Text="Could not find $(OvrtxDllName) in $(OvrtxExtractDir). The native library will not be available at runtime. Re-run the build with network access to download the package." />
+
+    <Message Importance="high" Text="ovrtx native library found at $(OvrtxBinDir)\$(OvrtxDllName)" />
+  </Target>
+
+  <!-- Copy native DLL to output directory -->
+  <Target Name="OvrtxCopyNative" AfterTargets="Build" DependsOnTargets="OvrtxLocateBinDir"
+          Condition="'$(OvrtxBinDir)' != ''">
+    <Copy SourceFiles="$(OvrtxBinDir)\$(OvrtxDllName)"
+          DestinationFolder="$(OutputPath)"
+          SkipUnchangedFiles="true" />
+
+    <!-- On Windows: create directory junctions for runtime directories -->
+    <Exec Condition="$([MSBuild]::IsOSPlatform('Windows'))"
+          Command="powershell -NoProfile -Command &quot;@('$(OvrtxRuntimeDirs)'.Split(';')) | ForEach-Object { $target = '$(OvrtxBinDir)\$_'; $link = '$(OutputPath)$_'; if ((Test-Path $target) -and -not (Test-Path $link)) { New-Item -ItemType Junction -Path $link -Target $target | Out-Null; Write-Host ('  Junction: ' + $link + ' -> ' + $target) } }&quot;"
+          ConsoleToMSBuild="true" />
+
+    <!-- On Linux: create symlinks for runtime directories -->
+    <Exec Condition="$([MSBuild]::IsOSPlatform('Linux'))"
+          Command="for dir in $(OvrtxRuntimeDirs); do target='$(OvrtxBinDir)/$dir'; link='$(OutputPath)$dir'; if [ -d &quot;$target&quot; ] &amp;&amp; [ ! -e &quot;$link&quot; ]; then ln -s &quot;$target&quot; &quot;$link&quot;; echo &quot;  Symlink: $link -> $target&quot;; fi; done" />
+
+    <Message Importance="high" Text="ovrtx runtime files staged to $(OutputPath)" />
+  </Target>
+
+  <!-- Define OVRTX_NATIVE_DIR for use in code (e.g., OvrtxLibrary.SetLibraryPath) -->
+  <Target Name="OvrtxDefineConstants" BeforeTargets="CoreCompile" DependsOnTargets="OvrtxLocateBinDir">
+    <PropertyGroup>
+      <DefineConstants>$(DefineConstants);OVRTX_HAS_NATIVE</DefineConstants>
+    </PropertyGroup>
+  </Target>
+
+</Project>
