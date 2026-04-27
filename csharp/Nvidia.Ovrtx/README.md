@@ -89,6 +89,31 @@ cd csharp/Nvidia.Ovrtx
 dotnet build
 ```
 
+## Testing
+
+```bash
+cd csharp/Nvidia.Ovrtx.Tests
+dotnet test
+```
+
+The test suite includes 181 tests covering:
+
+- **Struct layouts** — validates that all P/Invoke struct sizes and field offsets match the C headers
+- **DLPack types** — constructors, predefined constants, tensor shape/stride access
+- **String marshaling** — UTF-8 round-trip, null/empty handling, array contexts
+- **Config builder** — entry counts, key types, bool/string factory methods, record semantics
+- **Enum values** — all public and internal enums match the C API constants
+- **Handle types** — validity checks, equality, default values
+- **Exception types** — construction, status codes, inner exceptions
+- **Public API surface** — verifies IDisposable, expected methods/properties exist, internal types are hidden
+- **Integration tests** — GPU-dependent tests (auto-skip unless `OVRTX_TEST_INTEGRATION=1` is set)
+
+Unit tests run without the native library or GPU. Integration tests require both and are enabled with:
+
+```bash
+OVRTX_TEST_INTEGRATION=1 dotnet test
+```
+
 ## Examples
 
 See [examples/csharp/](../../examples/csharp/) for runnable example projects.
